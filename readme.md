@@ -3,9 +3,13 @@
 The project uses renderman python API to create photorealistic renders from scratch.
 ### Skills Demonstrated:   <br />
 Modeling
+
 OSL Shaders - Perlin Noise, Stripe Patterns, Dents and Scratches
+
 BRDF("Bidirectional Reflectance Distribution Function"). It gives the reflectance of a target as a function of illumination geometry and viewing geometry.
+
 Physically Based Rendering knowledge.
+
 Texture Mapping
 
 Reference Image:
