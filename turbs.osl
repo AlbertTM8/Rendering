@@ -1,0 +1,18 @@
+shader turbs (
+	color Cin=1,
+output float mag=0,
+output	color Cout=1
+	)
+{
+    float i;
+    float freq=1;
+
+    for(i=0;i<6;i+=1)
+	{
+	mag+=abs((float)noise("simplex",P*freq))/freq;
+	freq*=1.5;
+	}
+    Cout=mag;
+    mag=smoothstep(0.2,0.9,mag);
+}
+

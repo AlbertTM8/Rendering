@@ -1,0 +1,290 @@
+OpenShadingLanguage 1.00
+# Compiled by oslc 1.11.0@OPROJECT_VERSION_RELEASE_TYPE@
+# options: 
+shader DiffractionGrating	%meta{string,help,"Psuedo Diffraction Grating Material"} %meta{string,label,"Diffraction Grating"} 
+param	color	diffuse_color	0.0250000004 0.0250000004 0.0250000004		%meta{string,page,"Diffuse"} %meta{string,label,"Diffuse Color"}  %read{66,66} %write{2147483647,-1}
+param	float	diffuse_weight	1		%meta{string,label,"Diffuse Weight"} %meta{string,page,"Diffuse"} %meta{float,min,0} %meta{float,max,1}  %read{66,66} %write{2147483647,-1}
+param	float	diffuse_roughness	0		%meta{string,label,"Diffuse Roughness"} %meta{string,page,"Diffuse"} %meta{float,min,0} %meta{float,max,1}  %read{65,65} %write{2147483647,-1}
+param	color	refract_color	1 1 1		%meta{string,label,"Refraction Color"} %meta{string,page,"Refraction"}  %read{70,70} %write{2147483647,-1}
+param	float	refract_weight	0		%meta{string,label,"Refraction Weight"} %meta{string,page,"Refraction"} %meta{float,min,0} %meta{float,max,1}  %read{70,70} %write{2147483647,-1}
+param	float	refract_roughness	0		%meta{string,label,"Refraction Roughness"} %meta{string,page,"Refraction"} %meta{float,min,0} %meta{float,max,1}  %read{69,69} %write{2147483647,-1}
+param	float	refract_IOR	1.5		%meta{string,label,"Refraction IOR"} %meta{string,page,"Refraction"} %meta{float,min,0} %meta{float,max,25}  %read{69,69} %write{2147483647,-1}
+param	float	diffraction_weight	1		%meta{string,label,"Diffraction Weight"} %meta{string,page,"Diffraction"} %meta{float,min,0} %meta{float,max,1}  %read{87,87} %write{2147483647,-1}
+param	float	roughness	0.5		%meta{string,label,"Roughness"} %meta{string,page,"Diffraction"} %meta{float,min,0} %meta{float,max,1}  %read{5,63} %write{2147483647,-1}
+param	float	separation	0.899999976		%meta{string,label,"Separation"} %meta{string,page,"Diffraction"} %meta{float,min,0} %meta{float,max,1}  %read{5,5} %write{2147483647,-1}
+param	float	anisotropy	0.449999988		%meta{string,label,"Anisotropy"} %meta{string,page,"Diffraction"} %meta{float,min,-1} %meta{float,max,1}  %read{3,6} %write{2147483647,-1}
+param	float	rotation	0.300000012		%meta{string,label,"Rotation"} %meta{string,page,"Diffraction"} %meta{float,min,0} %meta{float,max,1}  %read{8,8} %write{2147483647,-1}
+param	float	IOR	1.60000002		%meta{string,page,"Diffraction"} %meta{string,label,"Diffraction IOR"} %meta{float,min,1} %meta{float,max,5}  %read{73,78} %write{2147483647,-1}
+param	color	coat_color	1 1 1		%meta{string,label,"Coat Color"} %meta{string,page,"Coat"}  %read{82,82} %write{2147483647,-1}
+param	float	coat_weight	0		%meta{string,label,"Coat Weight"} %meta{string,page,"Coat"} %meta{float,min,0} %meta{float,max,1}  %read{82,82} %write{2147483647,-1}
+param	float	coat_roughness	0		%meta{string,label,"Coat Roughness"} %meta{string,page,"Coat"} %meta{float,min,0} %meta{float,max,1}  %read{81,81} %write{2147483647,-1}
+param	float	coat_IOR	1.51999998		%meta{string,label,"Coat IOR"} %meta{string,page,"Coat"} %meta{float,min,0} %meta{float,max,25}  %read{81,81} %write{2147483647,-1}
+param	normal	Tangent	0 0 0		%read{2,2} %write{0,0} %initexpr
+oparam	closure color	outColor			%read{2147483647,-1} %write{89,89}
+global	normal	N	%read{1,1} %write{2147483647,-1}
+global	vector	dPdu	%read{0,0} %write{2147483647,-1}
+local	vector	___252_axis	%read{15,17} %write{12,12}
+local	float	___252_cosang	%read{14,55} %write{13,13}
+local	float	___252_sinang	%read{25,50} %write{13,13}
+local	float	___252_cosang1	%read{24,49} %write{14,14}
+local	float	___252_x	%read{18,50} %write{15,15}
+local	float	___252_y	%read{23,48} %write{16,16}
+local	float	___252_z	%read{25,53} %write{17,17}
+local	matrix	___252_M	%read{59,59} %write{57,57}
+local	vector	Normal	%read{11,81} %write{1,1}
+local	vector	T	%read{58,58} %write{2,2}
+local	float	a	%read{62,64} %write{4,4}
+local	float	delta	%read{72,77} %write{7,7}
+local	vector	rot	%read{72,77} %write{60,60}
+local	float	x_alpha	%read{73,78} %write{62,62}
+local	float	y_alpha	%read{73,78} %write{64,64}
+local	closure color	diffuseBRDF	%read{84,84} %write{67,67}
+local	closure color	refractionBSDF	%read{84,84} %write{71,71}
+local	closure color	microfacetR	%read{85,85} %write{74,74}
+local	closure color	microfacetG	%read{85,85} %write{76,76}
+local	closure color	microfacetB	%read{86,86} %write{79,79}
+local	closure color	coat_layer	%read{89,89} %write{83,83}
+const	float	$const1	1		%read{3,57} %write{2147483647,-1}
+temp	float	$tmp1	%read{4,4} %write{3,3}
+const	float	$const2	2		%read{4,63} %write{2147483647,-1}
+temp	float	$tmp2	%read{7,7} %write{5,5}
+const	float	$const3	0.00100000005		%read{7,64} %write{2147483647,-1}
+temp	float	$tmp3	%read{7,7} %write{6,6}
+const	float	$const4	6.28318548		%read{8,8} %write{2147483647,-1}
+temp	float	$tmp4	%read{13,13} %write{8,8}
+const	string	$const5	"rotate"		%read{9,10} %write{2147483647,-1}
+const	point	$const6	0 0 0		%read{11,60} %write{2147483647,-1}
+temp	vector	$tmp6	%read{12,12} %write{11,11}
+const	int	$const7	0		%read{15,81} %write{2147483647,-1}
+const	int	$const8	1		%read{16,69} %write{2147483647,-1}
+const	int	$const9	2		%read{17,17} %write{2147483647,-1}
+temp	float	$tmp7	%read{22,22} %write{18,18}
+temp	float	$tmp8	%read{20,20} %write{19,19}
+temp	float	$tmp9	%read{21,21} %write{20,20}
+temp	float	$tmp10	%read{22,22} %write{21,21}
+temp	float	$tmp11	%read{57,57} %write{22,22}
+temp	float	$tmp12	%read{24,24} %write{23,23}
+temp	float	$tmp13	%read{26,26} %write{24,24}
+temp	float	$tmp14	%read{26,26} %write{25,25}
+temp	float	$tmp15	%read{57,57} %write{26,26}
+temp	float	$tmp16	%read{28,28} %write{27,27}
+temp	float	$tmp17	%read{30,30} %write{28,28}
+temp	float	$tmp18	%read{30,30} %write{29,29}
+temp	float	$tmp19	%read{57,57} %write{30,30}
+const	float	$const10	0		%read{57,57} %write{2147483647,-1}
+temp	float	$tmp20	%read{32,32} %write{31,31}
+temp	float	$tmp21	%read{34,34} %write{32,32}
+temp	float	$tmp22	%read{34,34} %write{33,33}
+temp	float	$tmp23	%read{57,57} %write{34,34}
+temp	float	$tmp24	%read{39,39} %write{35,35}
+temp	float	$tmp25	%read{37,37} %write{36,36}
+temp	float	$tmp26	%read{38,38} %write{37,37}
+temp	float	$tmp27	%read{39,39} %write{38,38}
+temp	float	$tmp28	%read{57,57} %write{39,39}
+temp	float	$tmp29	%read{41,41} %write{40,40}
+temp	float	$tmp30	%read{43,43} %write{41,41}
+temp	float	$tmp31	%read{43,43} %write{42,42}
+temp	float	$tmp32	%read{57,57} %write{43,43}
+temp	float	$tmp33	%read{45,45} %write{44,44}
+temp	float	$tmp34	%read{47,47} %write{45,45}
+temp	float	$tmp35	%read{47,47} %write{46,46}
+temp	float	$tmp36	%read{57,57} %write{47,47}
+temp	float	$tmp37	%read{49,49} %write{48,48}
+temp	float	$tmp38	%read{51,51} %write{49,49}
+temp	float	$tmp39	%read{51,51} %write{50,50}
+temp	float	$tmp40	%read{57,57} %write{51,51}
+temp	float	$tmp41	%read{56,56} %write{52,52}
+temp	float	$tmp42	%read{54,54} %write{53,53}
+temp	float	$tmp43	%read{55,55} %write{54,54}
+temp	float	$tmp44	%read{56,56} %write{55,55}
+temp	float	$tmp45	%read{57,57} %write{56,56}
+temp	vector	$tmp46	%read{60,60} %write{59,59}
+temp	vector	$tmp47	%read{59,59} %write{58,58}
+temp	float	$tmp48	%read{62,62} %write{61,61}
+temp	float	$tmp49	%read{64,64} %write{63,63}
+temp	closure color	$tmp50	%read{67,67} %write{65,65}
+const	string	$const11	"oren_nayar"		%read{65,65} %write{2147483647,-1}
+temp	color	$tmp51	%read{67,67} %write{66,66}
+temp	closure color	$tmp52	%read{71,71} %write{69,69}
+const	string	$const12	"ggx"		%read{69,81} %write{2147483647,-1}
+const	string	$const13	"microfacet"		%read{68,81} %write{2147483647,-1}
+const	vector	$const14	0 0 0		%read{69,81} %write{2147483647,-1}
+temp	color	$tmp54	%read{71,71} %write{70,70}
+temp	closure color	$tmp55	%read{74,74} %write{73,73}
+temp	vector	$tmp56	%read{73,73} %write{72,72}
+const	color	$const15	1 0 0		%read{74,74} %write{2147483647,-1}
+temp	closure color	$tmp58	%read{76,76} %write{75,75}
+const	color	$const16	0 1 0		%read{76,76} %write{2147483647,-1}
+temp	closure color	$tmp60	%read{79,79} %write{78,78}
+temp	vector	$tmp61	%read{78,78} %write{77,77}
+const	color	$const17	0 0 1		%read{79,79} %write{2147483647,-1}
+temp	closure color	$tmp63	%read{83,83} %write{81,81}
+temp	color	$tmp65	%read{83,83} %write{82,82}
+temp	closure color	$tmp66	%read{88,88} %write{84,84}
+temp	closure color	$tmp67	%read{86,86} %write{85,85}
+temp	closure color	$tmp68	%read{87,87} %write{86,86}
+temp	closure color	$tmp69	%read{88,88} %write{87,87}
+temp	closure color	$tmp70	%read{89,89} %write{88,88}
+code Tangent
+# diffractoin.osl:116
+# 	normal Tangent = normalize(dPdu),
+	normalize	Tangent dPdu 	%filename{"diffractoin.osl"} %line{116} %argrw{"wr"}
+code ___main___
+# diffractoin.osl:126
+# 	vector Normal = normalize(N);
+	normalize	Normal N 	%filename{"diffractoin.osl"} %line{126} %argrw{"wr"}
+# diffractoin.osl:127
+# 	vector T = Tangent;
+	assign		T Tangent 	%line{127} %argrw{"wr"}
+# diffractoin.osl:128
+# 	float a = (anisotropy + 1.0) / 2.0;
+	add		$tmp1 anisotropy $const1 	%line{128} %argrw{"wrr"}
+	div		a $tmp1 $const2 	%argrw{"wrr"}
+# diffractoin.osl:129
+# 	float delta = mix(roughness * separation, 0.001, abs(anisotropy));
+	mul		$tmp2 roughness separation 	%line{129} %argrw{"wrr"}
+	abs		$tmp3 anisotropy 	%argrw{"wr"}
+	mix		delta $tmp2 $const3 $tmp3 	%argrw{"wrrr"}
+# diffractoin.osl:131
+#     vector rot = rotate(T, (rotation * M_2PI), Normal);
+	mul		$tmp4 rotation $const4 	%line{131} %argrw{"wrr"}
+	functioncall	$const5 61 	%argrw{"r"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:315
+#     return rotate (p, angle, point(0), axis);
+	functioncall	$const5 61 	%filename{"/opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h"} %line{315} %argrw{"r"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:292
+#     vector axis = normalize (b - a);
+	sub		$tmp6 Normal $const6 	%line{292} %argrw{"wrr"}
+	normalize	___252_axis $tmp6 	%argrw{"wr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:294
+#     sincos (angle, sinang, cosang);
+	sincos		$tmp4 ___252_sinang ___252_cosang 	%line{294} %argrw{"rww"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:295
+#     float cosang1 = 1.0 - cosang;
+	sub		___252_cosang1 $const1 ___252_cosang 	%line{295} %argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:296
+#     float x = axis[0], y = axis[1], z = axis[2];
+	compref		___252_x ___252_axis $const7 	%line{296} %argrw{"wrr"}
+	compref		___252_y ___252_axis $const8 	%argrw{"wrr"}
+	compref		___252_z ___252_axis $const9 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:297
+#     matrix M = matrix (x * x + (1.0 - x * x) * cosang,
+	mul		$tmp7 ___252_x ___252_x 	%line{297} %argrw{"wrr"}
+	mul		$tmp8 ___252_x ___252_x 	%argrw{"wrr"}
+	sub		$tmp9 $const1 $tmp8 	%argrw{"wrr"}
+	mul		$tmp10 $tmp9 ___252_cosang 	%argrw{"wrr"}
+	add		$tmp11 $tmp7 $tmp10 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:298
+#                        x * y * cosang1 + z * sinang,
+	mul		$tmp12 ___252_x ___252_y 	%line{298} %argrw{"wrr"}
+	mul		$tmp13 $tmp12 ___252_cosang1 	%argrw{"wrr"}
+	mul		$tmp14 ___252_z ___252_sinang 	%argrw{"wrr"}
+	add		$tmp15 $tmp13 $tmp14 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:299
+#                        x * z * cosang1 - y * sinang,
+	mul		$tmp16 ___252_x ___252_z 	%line{299} %argrw{"wrr"}
+	mul		$tmp17 $tmp16 ___252_cosang1 	%argrw{"wrr"}
+	mul		$tmp18 ___252_y ___252_sinang 	%argrw{"wrr"}
+	sub		$tmp19 $tmp17 $tmp18 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:301
+#                        x * y * cosang1 - z * sinang,
+	mul		$tmp20 ___252_x ___252_y 	%line{301} %argrw{"wrr"}
+	mul		$tmp21 $tmp20 ___252_cosang1 	%argrw{"wrr"}
+	mul		$tmp22 ___252_z ___252_sinang 	%argrw{"wrr"}
+	sub		$tmp23 $tmp21 $tmp22 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:302
+#                        y * y + (1.0 - y * y) * cosang,
+	mul		$tmp24 ___252_y ___252_y 	%line{302} %argrw{"wrr"}
+	mul		$tmp25 ___252_y ___252_y 	%argrw{"wrr"}
+	sub		$tmp26 $const1 $tmp25 	%argrw{"wrr"}
+	mul		$tmp27 $tmp26 ___252_cosang 	%argrw{"wrr"}
+	add		$tmp28 $tmp24 $tmp27 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:303
+#                        y * z * cosang1 + x * sinang,
+	mul		$tmp29 ___252_y ___252_z 	%line{303} %argrw{"wrr"}
+	mul		$tmp30 $tmp29 ___252_cosang1 	%argrw{"wrr"}
+	mul		$tmp31 ___252_x ___252_sinang 	%argrw{"wrr"}
+	add		$tmp32 $tmp30 $tmp31 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:305
+#                        x * z * cosang1 + y * sinang,
+	mul		$tmp33 ___252_x ___252_z 	%line{305} %argrw{"wrr"}
+	mul		$tmp34 $tmp33 ___252_cosang1 	%argrw{"wrr"}
+	mul		$tmp35 ___252_y ___252_sinang 	%argrw{"wrr"}
+	add		$tmp36 $tmp34 $tmp35 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:306
+#                        y * z * cosang1 - x * sinang,
+	mul		$tmp37 ___252_y ___252_z 	%line{306} %argrw{"wrr"}
+	mul		$tmp38 $tmp37 ___252_cosang1 	%argrw{"wrr"}
+	mul		$tmp39 ___252_x ___252_sinang 	%argrw{"wrr"}
+	sub		$tmp40 $tmp38 $tmp39 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:307
+#                        z * z + (1.0 - z * z) * cosang,
+	mul		$tmp41 ___252_z ___252_z 	%line{307} %argrw{"wrr"}
+	mul		$tmp42 ___252_z ___252_z 	%argrw{"wrr"}
+	sub		$tmp43 $const1 $tmp42 	%argrw{"wrr"}
+	mul		$tmp44 $tmp43 ___252_cosang 	%argrw{"wrr"}
+	add		$tmp45 $tmp41 $tmp44 	%argrw{"wrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:297
+#     matrix M = matrix (x * x + (1.0 - x * x) * cosang,
+	matrix		___252_M $tmp11 $tmp15 $tmp19 $const10 $tmp23 $tmp28 $tmp32 $const10 $tmp36 $tmp40 $tmp45 $const10 $const10 $const10 $const10 $const1 	%line{297} %argrw{"wrrrrrrrrrrrrrrrr"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:310
+#     return transform (M, p-a) + a;
+	sub		$tmp47 T $const6 	%line{310} %argrw{"wrr"}
+	transformv	$tmp46 ___252_M $tmp47 	%argrw{"wrr"}
+	add		rot $tmp46 $const6 	%argrw{"wrr"}
+# diffractoin.osl:133
+#     float x_alpha = mix(0.001, roughness * 2, a);
+	mul		$tmp48 roughness $const2 	%filename{"diffractoin.osl"} %line{133} %argrw{"wrr"}
+	mix		x_alpha $const3 $tmp48 a 	%argrw{"wrrr"}
+# diffractoin.osl:134
+#     float y_alpha = mix(roughness * 2, 0.001, a);
+	mul		$tmp49 roughness $const2 	%line{134} %argrw{"wrr"}
+	mix		y_alpha $tmp49 $const3 a 	%argrw{"wrrr"}
+# diffractoin.osl:136
+# 	closure color diffuseBRDF = diffuse_color * diffuse_weight * oren_nayar(Normal, diffuse_roughness);
+	closure		$tmp50 $const11 Normal diffuse_roughness 	%line{136} %argrw{"wrrr"}
+	mul		$tmp51 diffuse_color diffuse_weight 	%argrw{"wrr"}
+	mul		diffuseBRDF $tmp50 $tmp51 	%argrw{"wrr"}
+# diffractoin.osl:137
+# 	closure color refractionBSDF = refract_color * refract_weight * microfacet("ggx", Normal, refract_roughness, refract_IOR, 1);
+	functioncall	$const13 70 	%line{137} %argrw{"r"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:485
+#     return microfacet(distribution, N, vector(0), alpha, alpha, eta, refr);
+	closure		$tmp52 $const13 $const12 Normal $const14 refract_roughness refract_roughness refract_IOR $const8 	%filename{"/opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h"} %line{485} %argrw{"wrrrrrrrr"}
+# diffractoin.osl:137
+# 	closure color refractionBSDF = refract_color * refract_weight * microfacet("ggx", Normal, refract_roughness, refract_IOR, 1);
+	mul		$tmp54 refract_color refract_weight 	%filename{"diffractoin.osl"} %line{137} %argrw{"wrr"}
+	mul		refractionBSDF $tmp52 $tmp54 	%argrw{"wrr"}
+# diffractoin.osl:138
+# 	closure color microfacetR = microfacet("ggx", Normal, delta - rot, x_alpha, y_alpha, IOR, 0) * color(1,0,0);
+	sub		$tmp56 delta rot 	%line{138} %argrw{"wrr"}
+	closure		$tmp55 $const13 $const12 Normal $tmp56 x_alpha y_alpha IOR $const7 	%argrw{"wrrrrrrrr"}
+	mul		microfacetR $tmp55 $const15 	%argrw{"wrr"}
+# diffractoin.osl:139
+# 	closure color microfacetG = microfacet("ggx", Normal, rot, x_alpha, y_alpha, IOR, 0) * color(0,1,0);
+	closure		$tmp58 $const13 $const12 Normal rot x_alpha y_alpha IOR $const7 	%line{139} %argrw{"wrrrrrrrr"}
+	mul		microfacetG $tmp58 $const16 	%argrw{"wrr"}
+# diffractoin.osl:140
+# 	closure color microfacetB = microfacet("ggx", Normal, delta + rot, x_alpha, y_alpha, IOR, 0) * color(0,0,1);
+	add		$tmp61 delta rot 	%line{140} %argrw{"wrr"}
+	closure		$tmp60 $const13 $const12 Normal $tmp61 x_alpha y_alpha IOR $const7 	%argrw{"wrrrrrrrr"}
+	mul		microfacetB $tmp60 $const17 	%argrw{"wrr"}
+# diffractoin.osl:141
+# 	closure color coat_layer = coat_color * coat_weight * microfacet("ggx", Normal, coat_roughness, coat_IOR, 0);
+	functioncall	$const13 82 	%line{141} %argrw{"r"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:485
+#     return microfacet(distribution, N, vector(0), alpha, alpha, eta, refr);
+	closure		$tmp63 $const13 $const12 Normal $const14 coat_roughness coat_roughness coat_IOR $const7 	%filename{"/opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h"} %line{485} %argrw{"wrrrrrrrr"}
+# diffractoin.osl:141
+# 	closure color coat_layer = coat_color * coat_weight * microfacet("ggx", Normal, coat_roughness, coat_IOR, 0);
+	mul		$tmp65 coat_color coat_weight 	%filename{"diffractoin.osl"} %line{141} %argrw{"wrr"}
+	mul		coat_layer $tmp63 $tmp65 	%argrw{"wrr"}
+# diffractoin.osl:142
+#     outColor = diffuseBRDF + refractionBSDF + (diffraction_weight * (microfacetR + microfacetG + microfacetB)) + coat_layer;
+	add		$tmp66 diffuseBRDF refractionBSDF 	%line{142} %argrw{"wrr"}
+	add		$tmp67 microfacetR microfacetG 	%argrw{"wrr"}
+	add		$tmp68 $tmp67 microfacetB 	%argrw{"wrr"}
+	mul		$tmp69 $tmp68 diffraction_weight 	%argrw{"wrr"}
+	add		$tmp70 $tmp66 $tmp69 	%argrw{"wrr"}
+	add		outColor $tmp70 coat_layer 	%argrw{"wrr"}
+	end

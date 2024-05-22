@@ -1,0 +1,26 @@
+OpenShadingLanguage 1.00
+# Compiled by oslc 1.11.0@OPROJECT_VERSION_RELEASE_TYPE@
+# options: 
+shader colorNoise
+param	color	Cin	1 1 1		%read{2147483647,-1} %write{2147483647,-1}
+oparam	color	Cout	1 1 1		%read{2147483647,-1} %write{3,3}
+global	point	P	%read{1,1} %write{2147483647,-1}
+local	point	PP	%read{2,2} %write{1,1}
+const	string	$const1	"shader"		%read{1,1} %write{2147483647,-1}
+const	string	$const2	"transform"		%read{0,0} %write{2147483647,-1}
+const	string	$const3	"common"		%read{1,1} %write{2147483647,-1}
+const	string	$const4	"uperlin"		%read{3,3} %write{2147483647,-1}
+temp	point	$tmp1	%read{3,3} %write{2,2}
+const	float	$const6	10		%read{2,2} %write{2147483647,-1}
+code ___main___
+# colorNoise.osl:6
+#     point PP=transform("shader",P);
+	functioncall	$const2 2 	%filename{"colorNoise.osl"} %line{6} %argrw{"r"}
+# /opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h:285
+# point  transform (string to, point p)  { return transform("common",to,p); }
+	transform	PP $const3 $const1 P 	%filename{"/opt/pixar/RenderManProServer-24.4/lib/osl/include/stdosl.h"} %line{285} %argrw{"wrrr"}
+# colorNoise.osl:7
+#     Cout=(color)noise("uperlin",PP*10);
+	mul		$tmp1 PP $const6 	%filename{"colorNoise.osl"} %line{7} %argrw{"wrr"}
+	noise		Cout $const4 $tmp1 	%argrw{"wrr"}
+	end

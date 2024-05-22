@@ -1,0 +1,252 @@
+OpenShadingLanguage 1.00
+# Compiled by oslc 1.11.0@OPROJECT_VERSION_RELEASE_TYPE@
+# options: 
+shader Scratched	%meta{string,help,"Procedural Scratches"} %meta{string,label,"Scratches"} 
+param	float	density	10		%meta{string,label,"Density"} %meta{string,widget,"number"} %meta{float,min,1} %meta{float,max,50}  %read{1,1} %write{2147483647,-1}
+param	float	scale	2		%meta{string,label,"Scale"} %meta{string,widget,"number"} %meta{float,min,0.00999999978} %meta{float,max,100}  %read{2,15} %write{2147483647,-1}
+param	float	scratchLength	1		%meta{string,label,"Scratch Length"} %meta{string,widget,"number"} %meta{float,min,0} %meta{float,max,10}  %read{5,5} %write{2147483647,-1}
+param	float	scratchWidth	0.5		%meta{string,label,"Scratch Width"} %meta{string,widget,"number"} %meta{float,min,0} %meta{float,max,10}  %read{55,55} %write{2147483647,-1}
+param	int	hardScratches	1		%meta{string,label,"Hard scratches"} %meta{string,widget,"checkBox"}  %read{57,57} %write{2147483647,-1}
+param	float	roughness_default	0.25		%meta{string,label,"Default Roughness"} %meta{string,widget,"number"} %meta{float,min,0} %meta{float,max,1}  %read{0,71} %write{2147483647,-1}
+param	float	roughness_min	0		%meta{string,label,"Minimum Roughness"} %meta{string,widget,"number"} %meta{float,min,0} %meta{float,max,1}  %read{69,69} %write{2147483647,-1}
+param	float	roughness_max	1		%meta{string,label,"Maximum Roughness"} %meta{string,widget,"number"} %meta{float,min,0} %meta{float,max,1}  %read{69,69} %write{2147483647,-1}
+param	float	anisotropic_min	0		%meta{string,label,"Minimum Anisotropy"} %meta{string,widget,"number"} %meta{float,min,0} %meta{float,max,1}  %read{76,76} %write{2147483647,-1}
+param	float	anisotropic_max	1		%meta{string,label,"Maximum Anisotropy"} %meta{string,widget,"number"} %meta{float,min,0} %meta{float,max,1}  %read{76,76} %write{2147483647,-1}
+param	int	seed	12345		%meta{string,label,"Random Seed"} %meta{string,widget,"number"} %meta{int,min,0} %meta{int,max,99999}  %read{28,72} %write{2147483647,-1}
+oparam	float	roughness	0		%read{2147483647,-1} %write{0,82} %initexpr
+oparam	float	anisotropy	0		%read{2147483647,-1} %write{18,82}
+oparam	float	rotation	0		%read{18,82} %write{18,82}
+oparam	float	scratch	0		%read{18,82} %write{18,82}
+global	float	u	%read{7,14} %write{2147483647,-1}
+global	float	v	%read{10,14} %write{2147483647,-1}
+local	float	___325_theta	%read{18,82} %write{18,82}
+local	float	___325_s	%read{18,82} %write{18,82}
+local	float	___325_c	%read{18,82} %write{18,82}
+local	vector	___325_v	%read{18,82} %write{18,82}
+local	float	___325_distance	%read{18,82} %write{18,82}
+local	float	delta	%read{8,82} %write{4,4}
+local	int	max_search_cell	%read{17,82} %write{6,6}
+local	point	index	%read{18,82} %write{13,13}
+local	point	shading_p	%read{18,82} %write{15,15}
+local	int	___326_x	%read{18,82} %write{17,82}
+local	int	___328_y	%read{18,82} %write{18,82}
+local	point	___329_line_cell_index	%read{18,82} %write{18,82}
+local	point	___329_scratch_origin_p	%read{18,82} %write{18,82}
+local	float	___329_dist	%read{18,82} %write{18,82}
+local	float	___329_width	%read{18,82} %write{18,82}
+const	int	$const1	0		%read{19,77} %write{2147483647,-1}
+const	float	$const2	0		%read{0,78} %write{2147483647,-1}
+const	int	$const3	1		%read{43,82} %write{2147483647,-1}
+temp	float	$tmp1	%read{4,4} %write{3,3}
+temp	float	$tmp2	%read{2,2} %write{1,1}
+temp	float	$tmp3	%read{3,3} %write{2,2}
+const	float	$const4	0.100000001		%read{3,3} %write{2147483647,-1}
+const	float	$const5	1		%read{4,62} %write{2147483647,-1}
+temp	float	$tmp4	%read{6,6} %write{5,5}
+temp	float	$tmp5	%read{13,13} %write{9,9}
+temp	float	$tmp6	%read{8,8} %write{7,7}
+temp	float	$tmp7	%read{9,9} %write{8,8}
+temp	float	$tmp8	%read{13,13} %write{12,12}
+temp	float	$tmp9	%read{11,11} %write{10,10}
+temp	float	$tmp10	%read{12,12} %write{11,11}
+temp	point	$tmp11	%read{15,15} %write{14,14}
+temp	int	$tmp12	%read{18,82} %write{18,82}
+temp	int	$tmp13	%read{16,82} %write{17,82}
+temp	int	$tmp14	%read{18,82} %write{18,82}
+temp	int	$tmp15	%read{18,82} %write{18,82}
+temp	point	$tmp16	%read{18,82} %write{18,82}
+temp	float	$tmp17	%read{18,82} %write{18,82}
+temp	float	$tmp18	%read{18,82} %write{18,82}
+temp	vector	$tmp19	%read{18,82} %write{18,82}
+temp	point	$tmp20	%read{18,82} %write{18,82}
+temp	point	$tmp21	%read{18,82} %write{18,82}
+const	float	$const6	0.800000012		%read{30,30} %write{2147483647,-1}
+temp	point	$tmp22	%read{18,82} %write{18,82}
+const	float	$const7	0.5		%read{32,32} %write{2147483647,-1}
+temp	vector	$tmp23	%read{18,82} %write{18,82}
+temp	point	$tmp24	%read{18,82} %write{18,82}
+temp	point	$tmp25	%read{18,82} %write{18,82}
+temp	point	$tmp26	%read{18,82} %write{18,82}
+const	float	$const8	0.879999995		%read{37,37} %write{2147483647,-1}
+temp	point	$tmp27	%read{18,82} %write{18,82}
+temp	vector	$tmp28	%read{18,82} %write{18,82}
+const	string	$const9	"lineDistance"		%read{40,40} %write{2147483647,-1}
+const	float	$const10	6.28318548		%read{41,41} %write{2147483647,-1}
+temp	float	$tmp29	%read{18,82} %write{18,82}
+temp	vector	$tmp30	%read{18,82} %write{18,82}
+temp	point	$tmp31	%read{18,82} %write{18,82}
+temp	float	$tmp32	%read{18,82} %write{18,82}
+temp	point	$tmp33	%read{18,82} %write{18,82}
+temp	point	$tmp34	%read{18,82} %write{18,82}
+const	float	$const11	0.888000011		%read{53,53} %write{2147483647,-1}
+temp	point	$tmp35	%read{18,82} %write{18,82}
+temp	float	$tmp36	%read{18,82} %write{18,82}
+const	float	$const13	2048		%read{56,56} %write{2147483647,-1}
+temp	float	$tmp37	%read{18,82} %write{18,82}
+temp	float	$tmp38	%read{18,82} %write{18,82}
+temp	float	$tmp39	%read{18,82} %write{18,82}
+temp	int	$tmp40	%read{18,82} %write{18,82}
+temp	float	$tmp41	%read{18,82} %write{18,82}
+temp	float	$tmp42	%read{18,82} %write{18,82}
+temp	point	$tmp43	%read{18,82} %write{18,82}
+temp	point	$tmp44	%read{18,82} %write{18,82}
+const	float	$const14	0.888800025		%read{67,67} %write{2147483647,-1}
+temp	point	$tmp45	%read{18,82} %write{18,82}
+temp	int	$tmp46	%read{18,82} %write{18,82}
+temp	float	$tmp47	%read{18,82} %write{18,82}
+temp	float	$tmp48	%read{18,82} %write{18,82}
+temp	point	$tmp49	%read{18,82} %write{18,82}
+temp	point	$tmp50	%read{18,82} %write{18,82}
+const	float	$const15	0.888880014		%read{74,74} %write{2147483647,-1}
+temp	point	$tmp51	%read{18,82} %write{18,82}
+temp	int	$tmp52	%read{18,82} %write{18,82}
+code roughness
+# scratched.osl:79
+#     output float roughness = 0 + roughness_default,
+	add		roughness $const2 roughness_default 	%filename{"scratched.osl"} %line{79} %argrw{"wrr"}
+code ___main___
+# scratched.osl:89
+#     float delta = 1/max(density * density * scale, .1);
+	mul		$tmp2 density density 	%filename{"scratched.osl"} %line{89} %argrw{"wrr"}
+	mul		$tmp3 $tmp2 scale 	%argrw{"wrr"}
+	max		$tmp1 $tmp3 $const4 	%argrw{"wrr"}
+	div		delta $const5 $tmp1 	%argrw{"wrr"}
+# scratched.osl:90
+#     int max_search_cell = (int)ceil(scratchLength);
+	ceil		$tmp4 scratchLength 	%line{90} %argrw{"wr"}
+	assign		max_search_cell $tmp4 	%argrw{"wr"}
+# scratched.osl:93
+#     point index = point(round(scale * u/delta), round(scale * v/delta), 0.0);
+	mul		$tmp6 scale u 	%line{93} %argrw{"wrr"}
+	div		$tmp7 $tmp6 delta 	%argrw{"wrr"}
+	round		$tmp5 $tmp7 	%argrw{"wr"}
+	mul		$tmp9 scale v 	%argrw{"wrr"}
+	div		$tmp10 $tmp9 delta 	%argrw{"wrr"}
+	round		$tmp8 $tmp10 	%argrw{"wr"}
+	point		index $tmp5 $tmp8 $const2 	%argrw{"wrrr"}
+# scratched.osl:94
+#     point shading_p = point(u, v , 0.0)*scale;
+	point		$tmp11 u v $const2 	%line{94} %argrw{"wrrr"}
+	mul		shading_p $tmp11 scale 	%argrw{"wrr"}
+# scratched.osl:96
+#     for (int x = -max_search_cell; x <= max_search_cell; ++x){
+	for		$tmp13 18 20 82 83 	%line{96} %argrw{"r"}
+	neg		___326_x max_search_cell 	%argrw{"wr"}
+	le		$tmp12 ___326_x max_search_cell 	%argrw{"wrr"}
+	neq		$tmp13 $tmp12 $const1 	%argrw{"wrr"}
+# scratched.osl:97
+#         for (int y = -max_search_cell; y <= max_search_cell; ++y){
+	for		$tmp15 22 24 81 82 	%line{97} %argrw{"r"}
+	neg		___328_y max_search_cell 	%argrw{"wr"}
+	le		$tmp14 ___328_y max_search_cell 	%argrw{"wrr"}
+	neq		$tmp15 $tmp14 $const1 	%argrw{"wrr"}
+# scratched.osl:100
+#             point line_cell_index = index + point(x, y, 0);
+	assign		$tmp17 ___326_x 	%line{100} %argrw{"wr"}
+	assign		$tmp18 ___328_y 	%argrw{"wr"}
+	point		$tmp16 $tmp17 $tmp18 $const2 	%argrw{"wrrr"}
+	add		___329_line_cell_index index $tmp16 	%argrw{"wrr"}
+# scratched.osl:101
+#             point scratch_origin_p = (line_cell_index + (hashnoise(line_cell_index + seed + .8) - 0.5)) * delta;
+	assign		$tmp21 seed 	%line{101} %argrw{"wr"}
+	add		$tmp20 ___329_line_cell_index $tmp21 	%argrw{"wrr"}
+	add		$tmp22 $tmp20 $const6 	%argrw{"wrr"}
+	hashnoise	$tmp19 $tmp22 	%argrw{"wr"}
+	sub		$tmp23 $tmp19 $const7 	%argrw{"wrr"}
+	add		$tmp24 ___329_line_cell_index $tmp23 	%argrw{"wrr"}
+	mul		___329_scratch_origin_p $tmp24 delta 	%argrw{"wrr"}
+# scratched.osl:102
+#             rotation = hashnoise(line_cell_index + seed + .88);
+	assign		$tmp26 seed 	%line{102} %argrw{"wr"}
+	add		$tmp25 ___329_line_cell_index $tmp26 	%argrw{"wrr"}
+	add		$tmp27 $tmp25 $const8 	%argrw{"wrr"}
+	hashnoise	rotation $tmp27 	%argrw{"wr"}
+# scratched.osl:103
+#             float dist = lineDistance(scratch_origin_p - shading_p, rotation);
+	sub		$tmp28 ___329_scratch_origin_p shading_p 	%line{103} %argrw{"wrr"}
+	functioncall	$const9 51 	%argrw{"r"}
+# scratched.osl:13
+#     float theta = direction * M_2PI;
+	mul		___325_theta rotation $const10 	%line{13} %argrw{"wrr"}
+# scratched.osl:14
+#     float s = 0, c = 1;
+	assign		___325_s $const1 	%line{14} %argrw{"wr"}
+	assign		___325_c $const3 	%argrw{"wr"}
+# scratched.osl:15
+#     sincos(theta, s, c);
+	sincos		___325_theta ___325_s ___325_c 	%line{15} %argrw{"rww"}
+# scratched.osl:16
+#     vector v = vector(c,s,0);
+	vector		___325_v ___325_c ___325_s $const2 	%line{16} %argrw{"wrrr"}
+# scratched.osl:17
+#     float distance = length(p - (v * dot(v, p)));
+	dot		$tmp29 ___325_v $tmp28 	%line{17} %argrw{"wrr"}
+	mul		$tmp30 ___325_v $tmp29 	%argrw{"wrr"}
+	sub		$tmp31 $tmp28 $tmp30 	%argrw{"wrr"}
+	length		___325_distance $tmp31 	%argrw{"wr"}
+# scratched.osl:18
+#     return distance;
+	assign		___329_dist ___325_distance 	%line{18} %argrw{"wr"}
+# scratched.osl:106
+#             float width = scratchWidth * hashnoise(line_cell_index + seed + .888) / 2048;
+	assign		$tmp34 seed 	%line{106} %argrw{"wr"}
+	add		$tmp33 ___329_line_cell_index $tmp34 	%argrw{"wrr"}
+	add		$tmp35 $tmp33 $const11 	%argrw{"wrr"}
+	hashnoise	$tmp32 $tmp35 	%argrw{"wr"}
+	mul		$tmp36 scratchWidth $tmp32 	%argrw{"wrr"}
+	div		___329_width $tmp36 $const13 	%argrw{"wrr"}
+# scratched.osl:109
+#             if (hardScratches) {
+	if		hardScratches 60 63 	%line{109} %argrw{"r"}
+# scratched.osl:110
+#                 scratch = 1 - step(width, dist);
+	step		$tmp37 ___329_width ___329_dist 	%line{110} %argrw{"wrr"}
+	sub		scratch $const5 $tmp37 	%argrw{"wrr"}
+# scratched.osl:113
+#                 scratch = 1 - min(dist / width, 1);
+	div		$tmp39 ___329_dist ___329_width 	%line{113} %argrw{"wrr"}
+	min		$tmp38 $tmp39 $const5 	%argrw{"wrr"}
+	sub		scratch $const5 $tmp38 	%argrw{"wrr"}
+# scratched.osl:116
+#             if (scratch)
+	neq		$tmp40 scratch $const2 	%line{116} %argrw{"wrr"}
+	if		$tmp40 81 81 	%argrw{"r"}
+# scratched.osl:120
+#                         mix(roughness_min, roughness_max, hashnoise(line_cell_index + seed + .8888)),
+	assign		$tmp44 seed 	%line{120} %argrw{"wr"}
+	add		$tmp43 ___329_line_cell_index $tmp44 	%argrw{"wrr"}
+	add		$tmp45 $tmp43 $const14 	%argrw{"wrr"}
+	hashnoise	$tmp42 $tmp45 	%argrw{"wr"}
+	mix		$tmp41 roughness_min roughness_max $tmp42 	%argrw{"wrrr"}
+# scratched.osl:121
+#                         scratch > 0
+	gt		$tmp46 scratch $const1 	%line{121} %argrw{"wrr"}
+# scratched.osl:118
+#                 roughness = select(
+	select		roughness roughness_default $tmp41 $tmp46 	%line{118} %argrw{"wrrr"}
+# scratched.osl:125
+#                         mix(anisotropic_min, anisotropic_max, hashnoise(line_cell_index + seed + .88888)),
+	assign		$tmp50 seed 	%line{125} %argrw{"wr"}
+	add		$tmp49 ___329_line_cell_index $tmp50 	%argrw{"wrr"}
+	add		$tmp51 $tmp49 $const15 	%argrw{"wrr"}
+	hashnoise	$tmp48 $tmp51 	%argrw{"wr"}
+	mix		$tmp47 anisotropic_min anisotropic_max $tmp48 	%argrw{"wrrr"}
+# scratched.osl:126
+#                         scratch > 0
+	gt		$tmp52 scratch $const1 	%line{126} %argrw{"wrr"}
+# scratched.osl:123
+#                 anisotropy = select(
+	select		anisotropy $const2 $tmp47 $tmp52 	%line{123} %argrw{"wrrr"}
+# scratched.osl:128
+#                 rotation *= scratch;
+	mul		rotation rotation scratch 	%line{128} %argrw{"wrr"}
+# scratched.osl:129
+#                 return;
+	exit	%line{129}
+# scratched.osl:97
+#         for (int y = -max_search_cell; y <= max_search_cell; ++y){
+	add		___328_y ___328_y $const3 	%line{97} %argrw{"wrr"}
+# scratched.osl:96
+#     for (int x = -max_search_cell; x <= max_search_cell; ++x){
+	add		___326_x ___326_x $const3 	%line{96} %argrw{"wrr"}
+	end
